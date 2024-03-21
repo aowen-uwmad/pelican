@@ -19,6 +19,14 @@
 ARG BASE_YUM_REPO=release
 ARG BASE_OSG_SERIES=3.6
 
+FROM golang:1.21.0 AS go-generate
+
+WORKDIR /generate
+
+COPY . .
+
+RUN go generate ./...
+
 FROM node:20 AS website-build
 
 WORKDIR /webapp
@@ -26,7 +34,9 @@ WORKDIR /webapp
 COPY web_ui/frontend/package.json package.json
 
 RUN npm install
+
 COPY web_ui/frontend ./
+COPY --from=go-generate /generate/docs/parameters.json ./public/data/parameters.json
 
 RUN npm run build
 
